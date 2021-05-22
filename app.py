@@ -74,12 +74,12 @@ def generateMatrixOnMap():
 
     tackePuta = []
 
-    normalizovanX = (np.sort(np.random.uniform(44, 50, max_val * max_val))).tolist()
-    normalizovanY = (np.sort(np.random.uniform(22, 23, max_val * max_val))).tolist()
+    normalizovanX = ((np.random.uniform(44, 50, max_val * max_val))).tolist()
+    normalizovanY = ((np.random.uniform(22, 23, max_val * max_val))).tolist()
     counter = 0
     for idx, x in np.ndenumerate(mattemp):
         if str(x) == 'nan':
-            idx = (normalizovanX[counter], normalizovanY[counter])
+            idx = (idx[0] + normalizovanX[counter], idx[1] + normalizovanY[counter])
             tackePuta.append(idx)
             counter += 1
 
@@ -95,7 +95,7 @@ def generateMatrixOnMap():
     print(tackePuta)
 
 
-    return tackePuta;
+    return tackePuta
 
 @app.route('/')
 def index():
@@ -105,16 +105,26 @@ def index():
 def testMap():
     #bg lat, lon:  44.8125,  20.4612
 
-    tackePuta = generateMatrixOnMap()
+    # tackePuta = generateMatrixOnMap()
 
-    print('dobijene tacke puta:')
-    print(tackePuta)
 
-    latitude = []
-    longitude = []
-    for tacke in tackePuta:
-        latitude.append(tacke[0])
-        longitude.append(tacke[1])
+    latitude = [44.0970, 44.3209]
+    longitude = [20.6576, 20.8954]
+    # tackePuta[0] = (46.0970, 19.6576)
+    # tackePuta[-1] = (43.3209, 21.8954)
+
+
+    # for tacke in tackePuta:
+    #     latitude.append(tacke[0])
+    #     longitude.append(tacke[1])
+
+    print('latitude i longitude:')
+
+    print(latitude)
+    print(longitude)
+
+
+
 
     # lat = [46.0970, 43.3209],
     # lon = [19.6576, 21.8954],
@@ -123,6 +133,12 @@ def testMap():
         lat=latitude,
         lon=longitude,
         marker={'size': 4, 'color': '#f00'}))
+    #granice regiona:
+    fig.add_trace(go.Scattermapbox(
+        mode = "markers+lines",
+        lat = [44.445289, 43.503542, 43.503542, 44.445289, 44.445289],
+        lon = [20.314415, 20.314415, 22.172852, 22.172852, 20.314415],
+        marker = {'size': 10, 'color': '#ff0'}))
 
     fig.update_layout(
         margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
