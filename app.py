@@ -6,23 +6,47 @@ import plotly.graph_objects as go
 
 
 def readCSV():
-    file = open("obradjeni_podaci/zastita.csv")
+    file = open("obradjeni_podaci/poljoprivreda.csv")
     numpy_array = np.loadtxt(file, delimiter=",")
 
     return numpy_array
 
 
-def generateMatrixOnMap(lonA, lonB, latC, latD):
+def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
     min_val, max_val = 50, 50
 
     #trenutno radi testiranja se i dalje koristi random generisanje matrice
     map = np.random.uniform(2, 3, size=(min_val, max_val))
 
-    #za zastitu:
-    # map = readCSV()
+    # za zastitu:
+    map = readCSV()
 
-    map[0, 0] = -999
-    map[min_val - 1, max_val - 1] = -999
+    min_val, max_val = map.shape
+
+
+    koeficijentX = (lonB - lonA) / min_val
+    koeficijentY = (latD - latC) / max_val
+
+
+    endPoint = (415, 587)
+
+
+    for idx, x in np.ndenumerate(map):
+        newIdx = (lonA + idx[0] * koeficijentX, latD - idx[1] * koeficijentY)
+        if newIdx == startPoint:
+            startPoint = idx
+        if newIdx == endPoint:
+            endPoint = idx
+
+
+
+
+
+    #poziva se kao:
+    # generateMatrixOnMap(20.314415, 22.172852, 43.503542, 44.445289, (0, 0), (49, 49))
+
+    map[startPoint[0], startPoint[1]] = -999
+    map[endPoint[0], endPoint[1]] = -999
 
     # Initialize auxiliary arrays
     distmap = np.ones((min_val, max_val), dtype=int) * np.Infinity
@@ -85,23 +109,19 @@ def generateMatrixOnMap(lonA, lonB, latC, latD):
 
     print('put je:')
 
-    tackePuta = []
-    sveTacke = []
-    # normalizovanX = ((np.random.uniform(44, 50, max_val * max_val))).tolist()
-    # normalizovanY = ((np.random.uniform(22, 23, max_val * max_val))).tolist()
-    counter = 0
+    dobreTacke = []
+    loseTacke = []
+
 
     koeficijentX = (lonB - lonA) / min_val
     koeficijentY = (latD - latC) / max_val
 
-
     for idx, x in np.ndenumerate(mattemp):
+        idx = (lonA + idx[0] * koeficijentX, latD - idx[1] * koeficijentY)
         if str(x) == 'nan':
-            idx = (lonA + idx[0] * koeficijentX, latD - idx[1] * koeficijentY)
-            sveTacke.append(idx)
-            # idx = (idx[0] + normalizovanX[counter], idx[1] + normalizovanY[counter])
-            # tackePuta.append(idx)
-            # counter += 1
+            dobreTacke.append(idx)
+        else:
+            loseTacke.append(idx)
 
 
 
@@ -110,15 +130,9 @@ def generateMatrixOnMap(lonA, lonB, latC, latD):
     maxnum = 1  # sta je maxnum??
     print('The dump/mean path should have been: ' + np.str(maxnum * max_val))
 
-    print('tacke puta su:')
 
-    print(tackePuta)
 
-    print('SVE TACKE SU:')
-
-    print(sveTacke)
-
-    return sveTacke
+    return (dobreTacke, loseTacke)
 
 @app.route('/')
 def index():
@@ -130,14 +144,24 @@ def testMap():
 
     # tackePuta = generateMatrixOnMap()
 
-    allTacke = generateMatrixOnMap(20.314415, 22.172852, 43.503542,44.445289)
+    startPoint = (20.314415, 44.445289)
+    endPoint = (22.13568326, 43.52237694)
 
-    allPointsLat = []
-    allPointsLon = []
+    allTacke = generateMatrixOnMap(20.314415, 22.172852, 43.503542,44.445289, startPoint, endPoint)
 
-    for tacka in allTacke:
-        allPointsLat.append(tacka[1])
-        allPointsLon.append(tacka[0])
+    dobreTackeLat = []
+    dobreTackeLon = []
+
+    for tacka in allTacke[0]:
+        dobreTackeLat.append(tacka[1])
+        dobreTackeLon.append(tacka[0])
+
+    loseTackeLat = []
+    loseTackeLon = []
+
+    for tacka in allTacke[1]:
+        loseTackeLat.append(tacka[1])
+        loseTackeLon.append(tacka[0])
 
     latitude = [20.6576, 20.8954]
     longitude = [44.0970, 44.3209]
@@ -172,12 +196,20 @@ def testMap():
         marker = {'size': 10, 'color': '#ff0'}))
 
 
-    #sve tacke, normalizovane:
+    #dobre tacke, normalizovane:
     fig.add_trace(go.Scattermapbox(
-        mode="markers",
-        lon=allPointsLon,
-        lat=allPointsLat,
-        marker={'size': 10, 'color': '#fff'}))
+        mode="markers+lines",
+        lon=dobreTackeLon,
+        lat=dobreTackeLat,
+        marker={'size': 10, 'color': '#00f'}))
+
+    #
+    # #lose tacke, normalizovane:
+    # fig.add_trace(go.Scattermapbox(
+    #     mode="markers",
+    #     lon=loseTackeLon,
+    #     lat=loseTackeLat,
+    #     marker={'size': 10, 'color': '#f00'}))
 
     fig.update_layout(
         margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
