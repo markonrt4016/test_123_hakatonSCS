@@ -12,17 +12,17 @@ def readCSV():
     return numpy_array
 
 
-def generateMatrixOnMap():
+def generateMatrixOnMap(lonA, lonB, latC, latD):
     min_val, max_val = 50, 50
 
     #trenutno radi testiranja se i dalje koristi random generisanje matrice
-    map = np.random.uniform(5, 50, size=(min_val, max_val))
+    map = np.random.uniform(2, 3, size=(min_val, max_val))
 
     #za zastitu:
     # map = readCSV()
 
-    map[0, 0] = 0
-    map[min_val - 1, max_val - 1] = 0
+    map[0, 0] = -999
+    map[min_val - 1, max_val - 1] = -999
 
     # Initialize auxiliary arrays
     distmap = np.ones((min_val, max_val), dtype=int) * np.Infinity
@@ -86,17 +86,22 @@ def generateMatrixOnMap():
     print('put je:')
 
     tackePuta = []
-
+    sveTacke = []
     # normalizovanX = ((np.random.uniform(44, 50, max_val * max_val))).tolist()
     # normalizovanY = ((np.random.uniform(22, 23, max_val * max_val))).tolist()
     counter = 0
-    for idx, x in np.ndenumerate(mattemp):
 
-        print('idx,x:' + str(idx) + ' - ' + str(x))
+    koeficijentX = (lonB - lonA) / min_val
+    koeficijentY = (latD - latC) / max_val
+
+
+    for idx, x in np.ndenumerate(mattemp):
         if str(x) == 'nan':
+            idx = (lonA + idx[0] * koeficijentX, latD - idx[1] * koeficijentY)
+            sveTacke.append(idx)
             # idx = (idx[0] + normalizovanX[counter], idx[1] + normalizovanY[counter])
-            tackePuta.append(idx)
-            counter += 1
+            # tackePuta.append(idx)
+            # counter += 1
 
 
 
@@ -109,8 +114,11 @@ def generateMatrixOnMap():
 
     print(tackePuta)
 
+    print('SVE TACKE SU:')
 
-    return tackePuta
+    print(sveTacke)
+
+    return sveTacke
 
 @app.route('/')
 def index():
@@ -122,9 +130,17 @@ def testMap():
 
     # tackePuta = generateMatrixOnMap()
 
-    generateMatrixOnMap()
-    latitude = [44.0970, 44.3209]
-    longitude = [20.6576, 20.8954]
+    allTacke = generateMatrixOnMap(20.314415, 22.172852, 43.503542,44.445289)
+
+    allPointsLat = []
+    allPointsLon = []
+
+    for tacka in allTacke:
+        allPointsLat.append(tacka[1])
+        allPointsLon.append(tacka[0])
+
+    latitude = [20.6576, 20.8954]
+    longitude = [44.0970, 44.3209]
     # tackePuta[0] = (46.0970, 19.6576)
     # tackePuta[-1] = (43.3209, 21.8954)
 
@@ -145,15 +161,23 @@ def testMap():
     # lon = [19.6576, 21.8954],
     fig = go.Figure(go.Scattermapbox(
         mode="markers+lines",
-        lat=latitude,
         lon=longitude,
+        lat=latitude,
         marker={'size': 4, 'color': '#f00'}))
     #granice regiona:
     fig.add_trace(go.Scattermapbox(
         mode = "markers+lines",
+        lon=[20.314415, 20.314415, 22.172852, 22.172852, 20.314415],
         lat = [44.445289, 43.503542, 43.503542, 44.445289, 44.445289],
-        lon = [20.314415, 20.314415, 22.172852, 22.172852, 20.314415],
         marker = {'size': 10, 'color': '#ff0'}))
+
+
+    #sve tacke, normalizovane:
+    fig.add_trace(go.Scattermapbox(
+        mode="markers",
+        lon=allPointsLon,
+        lat=allPointsLat,
+        marker={'size': 10, 'color': '#fff'}))
 
     fig.update_layout(
         margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
