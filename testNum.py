@@ -26,5 +26,29 @@ arr = np.array([1, 2, 3])
 for idx, x in np.ndenumerate(matrica):
   print(idx, x)
 
+#
+# print(np.sort(np.random.uniform(5,50,60)).tolist())
 
-print(np.sort(np.random.uniform(5,50,60)).tolist())
+print('test:')
+
+
+matrica = np.ones((10, 10), dtype=int)
+
+print(matrica)
+
+matrica = matrica *55
+
+print(matrica)
+
+import time
+import threading
+start = time.time()
+
+
+time.sleep(2)
+
+end = time.time()
+
+print('trajanje generisanja:')
+
+print(str(end - start))

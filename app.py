@@ -6,26 +6,28 @@ import plotly.graph_objects as go
 
 
 def readCSV():
-    file = open("obradjeni_podaci/naselja.csv")
+    file = open("obradjeni_podaci/zastita.csv")
     numpy_array = np.loadtxt(file, delimiter=",")
 
     return numpy_array
 
 
-def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
-    min_val, max_val = 50, 50
+import time
 
+def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
+    # min_val, max_val = 50, 50
+    start = time.time()
     #trenutno radi testiranja se i dalje koristi random generisanje matrice
-    map = np.random.uniform(2, 3, size=(min_val, max_val))
+    # map = np.random.uniform(2, 3, size=(min_val, max_val))
 
     # za zastitu:
     map = readCSV()
+    map = map + 1
+    cols, rows = map.shape
 
-    min_val, max_val = map.shape
 
-
-    koeficijentX = (lonB - lonA) / min_val
-    koeficijentY = (latD - latC) / max_val
+    koeficijentX = (lonB - lonA) / cols
+    koeficijentY = (latD - latC) / rows
 
 
     endPoint = (415, 587)
@@ -49,10 +51,10 @@ def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
     map[endPoint[0], endPoint[1]] = -999
 
     # Initialize auxiliary arrays
-    distmap = np.ones((min_val, max_val), dtype=int) * np.Infinity
+    distmap = np.ones((cols, rows), dtype=int) * np.Infinity
     distmap[0, 0] = 0
-    originmap = np.ones((min_val, max_val), dtype=int) * np.nan
-    visited = np.zeros((min_val, max_val), dtype=bool)
+    originmap = np.ones((cols, rows), dtype=int) * np.nan
+    visited = np.zeros((cols, rows), dtype=bool)
     finished = False
     x, y = np.int(0), np.int(0)
     count = 0
@@ -60,25 +62,46 @@ def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
     # Loop Dijkstra until reaching the target cell
     while not finished:
         # move to x+1,y
-        if x < min_val - 1:
+        if x < cols - 1:
             if distmap[x + 1, y] > map[x + 1, y] + distmap[x, y] and not visited[x + 1, y]:
                 distmap[x + 1, y] = map[x + 1, y] + distmap[x, y]
-                originmap[x + 1, y] = np.ravel_multi_index([x, y], (min_val, max_val))
+                originmap[x + 1, y] = np.ravel_multi_index([x, y], (cols, rows))
         # move to x-1,y
         if x > 0:
             if distmap[x - 1, y] > map[x - 1, y] + distmap[x, y] and not visited[x - 1, y]:
                 distmap[x - 1, y] = map[x - 1, y] + distmap[x, y]
-                originmap[x - 1, y] = np.ravel_multi_index([x, y], (min_val, max_val))
+                originmap[x - 1, y] = np.ravel_multi_index([x, y], (cols, rows))
         # move to x,y+1
-        if y < max_val - 1:
+        if y < rows - 1:
             if distmap[x, y + 1] > map[x, y + 1] + distmap[x, y] and not visited[x, y + 1]:
                 distmap[x, y + 1] = map[x, y + 1] + distmap[x, y]
-                originmap[x, y + 1] = np.ravel_multi_index([x, y], (min_val, max_val))
+                originmap[x, y + 1] = np.ravel_multi_index([x, y], (cols, rows))
         # move to x,y-1
         if y > 0:
             if distmap[x, y - 1] > map[x, y - 1] + distmap[x, y] and not visited[x, y - 1]:
                 distmap[x, y - 1] = map[x, y - 1] + distmap[x, y]
-                originmap[x, y - 1] = np.ravel_multi_index([x, y], (min_val, max_val))
+                originmap[x, y - 1] = np.ravel_multi_index([x, y], (cols, rows))
+
+        # move to x+1,y + 1
+        if x < cols - 1 and y < rows - 1:
+            if distmap[x + 1, y + 1] > map[x + 1, y + 1] * 1.41 + distmap[x, y] and not visited[x + 1, y + 1]:
+                distmap[x + 1, y + 1] = map[x + 1, y + 1] * 1.41 + distmap[x, y]
+                originmap[x + 1, y + 1] = np.ravel_multi_index([x, y], (cols, rows))
+        # move to x-1,y - 1
+        if x > 0 and y > 0:
+            if distmap[x - 1, y - 1] > map[x - 1, y - 1] * 1.41 + distmap[x, y] and not visited[x - 1, y - 1]:
+                distmap[x - 1, y - 1] = map[x - 1, y - 1] * 1.41 + distmap[x, y]
+                originmap[x - 1, y - 1] = np.ravel_multi_index([x, y], (cols, rows))
+        # move to x - 1 ,y+1
+        if y < rows - 1 and x > 0:
+            if distmap[x - 1, y + 1] > map[x - 1, y + 1] * 1.41 + distmap[x, y] and not visited[x - 1, y + 1]:
+                distmap[x - 1, y + 1] = map[x - 1, y + 1] * 1.41 + distmap[x, y]
+                originmap[x - 1, y + 1] = np.ravel_multi_index([x, y], (cols, rows))
+        # move to x + 1,y-1
+        if y > 0 and x < cols - 1:
+            if distmap[x + 1, y - 1] > map[x + 1, y - 1] * 1.41 + distmap[x, y] and not visited[x + 1, y - 1]:
+                distmap[x + 1, y - 1] = map[x + 1, y - 1] * 1.41 + distmap[x, y]
+                originmap[x + 1, y - 1] = np.ravel_multi_index([x, y], (cols, rows))
 
         visited[x, y] = True
         dismaptemp = distmap
@@ -86,19 +109,19 @@ def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
         # now we find the shortest path so far
         minpost = np.unravel_index(np.argmin(dismaptemp), np.shape(dismaptemp))
         x, y = minpost[0], minpost[1]
-        if x == min_val - 1 and y == max_val - 1:
+        if x == cols - 1 and y == rows - 1:
             finished = True
         count = count + 1
 
     # Start backtracking to plot the path
     mattemp = map.astype(float)
-    x, y = min_val - 1, max_val - 1
+    x, y = cols - 1, rows - 1
     path = []
     mattemp[np.int(x), np.int(y)] = np.nan
 
     while x > 0.0 or y > 0.0:
         path.append([np.int(x), np.int(y)])
-        xxyy = np.unravel_index(np.int(originmap[np.int(x), np.int(y)]), (min_val, max_val))
+        xxyy = np.unravel_index(np.int(originmap[np.int(x), np.int(y)]), (cols, rows))
         x, y = xxyy[0], xxyy[1]
         mattemp[np.int(x), np.int(y)] = np.nan
     path.append([np.int(x), np.int(y)])
@@ -113,8 +136,8 @@ def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
     loseTacke = []
 
 
-    koeficijentX = (lonB - lonA) / min_val
-    koeficijentY = (latD - latC) / max_val
+    koeficijentX = (lonB - lonA) / cols
+    koeficijentY = (latD - latC) / rows
 
     for idx, x in np.ndenumerate(mattemp):
         idx = (lonA + idx[0] * koeficijentX, latD - idx[1] * koeficijentY)
@@ -125,12 +148,16 @@ def generateMatrixOnMap(lonA, lonB, latC, latD, startPoint, endPoint):
 
 
 
-    print('The path length is: ' + np.str(distmap[min_val - 1, max_val - 1]))
+    print('The path length is: ' + np.str(distmap[cols - 1, rows - 1]))
 
     maxnum = 1  # sta je maxnum??
-    print('The dump/mean path should have been: ' + np.str(maxnum * max_val))
+    print('The dump/mean path should have been: ' + np.str(maxnum * rows))
 
+    end = time.time()
 
+    print('trajanje generisanja:')
+
+    print(str(end - start))
 
     return (dobreTacke, loseTacke)
 
@@ -218,9 +245,9 @@ def testMap():
             'center': {'lat': 44.0128, 'lon': 20.9114},
             'zoom': 6.8})
 
-    fig.write_html('templates/naselja.html')
+    fig.write_html('templates/zastita.html')
 
-    return render_template('naselja.html')
+    return render_template('zastita.html')
 
 
 if __name__ == '__main__':
