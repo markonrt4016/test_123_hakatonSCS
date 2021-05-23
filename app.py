@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 
 def readCSV():
-    file = open("obradjeni_podaci/poljoprivreda.csv")
+    file = open("obradjeni_podaci/naselja.csv")
     numpy_array = np.loadtxt(file, delimiter=",")
 
     return numpy_array
@@ -198,7 +198,7 @@ def testMap():
 
     #dobre tacke, normalizovane:
     fig.add_trace(go.Scattermapbox(
-        mode="markers+lines",
+        mode="markers",
         lon=dobreTackeLon,
         lat=dobreTackeLat,
         marker={'size': 10, 'color': '#00f'}))
@@ -218,9 +218,9 @@ def testMap():
             'center': {'lat': 44.0128, 'lon': 20.9114},
             'zoom': 6.8})
 
-    fig.write_html('templates/second_figure.html')
+    fig.write_html('templates/naselja.html')
 
-    return render_template('second_figure.html')
+    return render_template('naselja.html')
 
 
 if __name__ == '__main__':
